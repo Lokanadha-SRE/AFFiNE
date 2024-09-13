@@ -1,0 +1,49 @@
+apiVersion: apps.openshift.io/v1
+kind: DeploymentConfig
+metadata:
+  labels:
+    io.kompose.service: redis
+  name: redis
+spec:
+  replicas: 1
+  selector:
+    io.kompose.service: redis
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        io.kompose.service: redis
+    spec:
+      containers:
+        - image: ' '
+          livenessProbe:
+            exec:
+              command:
+                - redis-cli
+                - --raw
+                - incr
+                - ping
+            failureThreshold: 5
+            periodSeconds: 10
+            timeoutSeconds: 5
+          name: affine-redis
+          volumeMounts:
+            - mountPath: /data
+              name: redis-cm0
+      restartPolicy: Always
+      volumes:
+        - configMap:
+            name: redis-cm0
+          name: redis-cm0
+  test: false
+  triggers:
+    - type: ConfigChange
+    - imageChangeParams:
+        automatic: true
+        containerNames:
+          - affine_redis
+        from:
+          kind: ImageStreamTag
+          name: redis:latest
+      type: ImageChange

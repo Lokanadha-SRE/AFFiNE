@@ -1,0 +1,61 @@
+apiVersion: apps.openshift.io/v1
+kind: DeploymentConfig
+metadata:
+  labels:
+    io.kompose.service: affine
+  name: affine
+spec:
+  replicas: 1
+  selector:
+    io.kompose.service: affine
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        io.kompose.service: affine
+    spec:
+      containers:
+        - args:
+            - sh
+            - -c
+            - node ./scripts/self-host-predeploy && node ./dist/index.js
+          env:
+            - name: AFFINE_ADMIN_EMAIL
+            - name: AFFINE_ADMIN_PASSWORD
+            - name: AFFINE_CONFIG_PATH
+              value: /root/.affine/config
+            - name: DATABASE_URL
+              value: postgres://affine:affine@postgres:5432/affine
+            - name: NODE_ENV
+              value: production
+            - name: NODE_OPTIONS
+              value: '"--import=./scripts/register.js"'
+            - name: REDIS_SERVER_HOST
+              value: redis
+          image: ' '
+          name: affine-selfhosted
+          ports:
+            - containerPort: 3010
+              protocol: TCP
+            - containerPort: 5555
+              protocol: TCP
+          volumeMounts:
+            - mountPath: /root/.affine/config
+              name: affine-cm0
+      restartPolicy: Always
+      volumes:
+        - configMap:
+            name: affine-cm0
+          name: affine-cm0
+  test: false
+  triggers:
+    - type: ConfigChange
+    - imageChangeParams:
+        automatic: true
+        containerNames:
+          - affine_selfhosted
+        from:
+          kind: ImageStreamTag
+          name: affine:stable
+      type: ImageChange

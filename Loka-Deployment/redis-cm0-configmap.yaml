@@ -1,0 +1,8 @@
+apiVersion: v1
+binaryData:
+  dump.rdb: VWtWRVNWTXdNREV5K2dseVpXUnBjeTEyWlhJRk55NDBMakQ2Q25KbFpHbHpMV0pwZEhQQVFQb0ZZM1JwYldYQ2l1RGpadm9JZFhObFpDMXRaVzNDZ05FT0FQb0lZVzltTFdKaGMyWEFBUDRBK3dFQUFBUndhVzVud1N3Qi8yaU95SzAycW0zeA==
+kind: ConfigMap
+metadata:
+  labels:
+    io.kompose.service: redis
+  name: redis-cm0
