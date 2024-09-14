@@ -1,21 +1,20 @@
 import '@affine/component/theme/global.css';
 import '@affine/component/theme/theme.css';
-import './styles/mobile.css';
+import '@affine/core/mobile/styles/mobile.css';
 
 import { AffineContext } from '@affine/component/context';
 import { AppFallback } from '@affine/core/components/affine/app-container';
+import { Telemetry } from '@affine/core/components/telemetry';
+import { configureMobileModules } from '@affine/core/mobile/modules';
+import { router } from '@affine/core/mobile/router';
 import { configureCommonModules } from '@affine/core/modules';
 import { configureLocalStorageStateStorageImpls } from '@affine/core/modules/storage';
+import { configureIndexedDBUserspaceStorageProvider } from '@affine/core/modules/userspace';
 import { configureBrowserWorkbenchModule } from '@affine/core/modules/workbench';
 import {
   configureBrowserWorkspaceFlavours,
   configureIndexedDBWorkspaceEngineStorageProvider,
 } from '@affine/core/modules/workspace-engine';
-import {
-  performanceLogger,
-  performanceRenderLogger,
-} from '@affine/core/shared';
-import { Telemetry } from '@affine/core/telemetry';
 import { createI18n, setUpLanguage } from '@affine/i18n';
 import {
   Framework,
@@ -26,29 +25,15 @@ import {
 import { Suspense } from 'react';
 import { RouterProvider } from 'react-router-dom';
 
-import { configureMobileModules } from './modules';
-import { router } from './router';
-
-if (environment.isElectron && environment.isDebug) {
-  document.body.innerHTML = `<h1 style="color:red;font-size:5rem;text-align:center;">Don't run web entry in electron.</h1>`;
-  throw new Error('Wrong distribution');
-}
-
 const future = {
   v7_startTransition: true,
 } as const;
 
-const performanceI18nLogger = performanceLogger.namespace('i18n');
-
 async function loadLanguage() {
-  performanceI18nLogger.info('start');
-
   const i18n = createI18n();
   document.documentElement.lang = i18n.language;
 
-  performanceI18nLogger.info('set up');
   await setUpLanguage(i18n);
-  performanceI18nLogger.info('done');
 }
 
 let languageLoadingPromise: Promise<void> | null = null;
@@ -59,6 +44,7 @@ configureBrowserWorkbenchModule(framework);
 configureLocalStorageStateStorageImpls(framework);
 configureBrowserWorkspaceFlavours(framework);
 configureIndexedDBWorkspaceEngineStorageProvider(framework);
+configureIndexedDBUserspaceStorageProvider(framework);
 configureMobileModules(framework);
 const frameworkProvider = framework.provider();
 
@@ -69,8 +55,6 @@ window.addEventListener('focus', () => {
 frameworkProvider.get(LifecycleService).applicationStart();
 
 export function App() {
-  performanceRenderLogger.debug('App');
-
   if (!languageLoadingPromise) {
     languageLoadingPromise = loadLanguage().catch(console.error);
   }
